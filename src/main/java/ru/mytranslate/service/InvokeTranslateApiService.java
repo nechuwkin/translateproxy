@@ -1,6 +1,5 @@
 package ru.mytranslate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -12,11 +11,13 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class InvokeTranslateApiService {
-    @Value("${translate.url}")
-    private String url;
+    private final String url;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    public InvokeTranslateApiService(@Value("${translate.url}") String url, RestTemplate restTemplate) {
+        this.url = url;
+        this.restTemplate = restTemplate;
+    }
 
     @Async
     public CompletableFuture<YandexApiResponseDto> translate(ValidLanguage from, ValidLanguage to, String word) {

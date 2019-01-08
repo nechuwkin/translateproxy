@@ -1,6 +1,5 @@
 package ru.mytranslate.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.mytranslate.domain.SystemLog;
 import ru.mytranslate.domain.dto.MyTranslateRequestDto;
@@ -14,11 +13,14 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class MainController {
-    @Autowired
-    private SystemLogRepository systemLogRepository;
 
-    @Autowired
-    private InvokeTranslateApiService service;
+    private final SystemLogRepository systemLogRepository;
+    private final InvokeTranslateApiService service;
+
+    public MainController(SystemLogRepository systemLogRepository, InvokeTranslateApiService service) {
+        this.systemLogRepository = systemLogRepository;
+        this.service = service;
+    }
 
     @GetMapping(value = "/translate")
     public MyTranslateResponseDto translate(@RequestParam("text") String text,
@@ -35,11 +37,11 @@ public class MainController {
         CompletableFuture.allOf(allFutures).join();
 
         StringBuilder translatedString = new StringBuilder();
-        for (int i = 0; i < allFutures.length; i++) {
+        for (CompletableFuture future : allFutures) {
             if (translatedString.length() != 0) {
                 translatedString.append(" ");
             }
-            translatedString.append(allFutures[i].get());
+            translatedString.append(future.get());
         }
 
         String ip = request.getRemoteAddr();
