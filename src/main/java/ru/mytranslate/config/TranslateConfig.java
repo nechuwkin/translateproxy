@@ -1,5 +1,6 @@
 package ru.mytranslate.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -14,12 +15,14 @@ public class TranslateConfig {
         return new RestTemplate();
     }
 
-    @Bean
-    public Executor taskExecutor() {
+    @Bean(name = "taskExecutor")
+    public Executor taskExecutor(@Value("${executor.pool.size.core}") int corePoolSize,
+                                 @Value("${executor.pool.size.max}") int maxPoolSize,
+                                 @Value("${executor.queue.size}") int queueCapacity) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
-        executor.setQueueCapacity(50);
+        executor.setCorePoolSize(corePoolSize);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setQueueCapacity(queueCapacity);
         executor.setThreadNamePrefix("mytranslate-");
         executor.initialize();
         return executor;
