@@ -4,20 +4,17 @@ import org.springframework.web.bind.annotation.*;
 import ru.mytranslate.domain.SystemLog;
 import ru.mytranslate.domain.dto.MyTranslateRequestDto;
 import ru.mytranslate.domain.dto.MyTranslateResponseDto;
-import ru.mytranslate.domain.dto.YandexApiResponseDto;
 import ru.mytranslate.repository.SystemLogRepository;
-import ru.mytranslate.service.InvokeTranslateApiService;
+import ru.mytranslate.service.MyTranslateService;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class MainController {
-
     private final SystemLogRepository systemLogRepository;
-    private final InvokeTranslateApiService service;
+    private final MyTranslateService service;
 
-    public MainController(SystemLogRepository systemLogRepository, InvokeTranslateApiService service) {
+    public MainController(SystemLogRepository systemLogRepository, MyTranslateService service) {
         this.systemLogRepository = systemLogRepository;
         this.service = service;
     }
@@ -27,27 +24,7 @@ public class MainController {
                                           @RequestParam("from") ValidLanguage from,
                                           @RequestParam("to") ValidLanguage to,
                                           HttpServletRequest request) throws Exception {
-        String[] words = text.split(" ");
-
-        CompletableFuture[] allFutures = new CompletableFuture[words.length];
-        for (int i = 0; i < words.length; i++) {
-            CompletableFuture<YandexApiResponseDto> future = service.translate(from, to, words[i]);
-            allFutures[i] = future;
-        }
-        CompletableFuture.allOf(allFutures).join();
-
-        StringBuilder translatedString = new StringBuilder();
-        for (CompletableFuture future : allFutures) {
-            if (translatedString.length() != 0) {
-                translatedString.append(" ");
-            }
-            translatedString.append(future.get());
-        }
-
-        String ip = request.getRemoteAddr();
-        systemLogRepository.save(new SystemLog(ip, from, to, text));
-
-        return new MyTranslateResponseDto(translatedString.toString());
+        return new MyTranslateResponseDto(service.translate(from, to, text, request.getRemoteAddr()));
     }
 
     @PostMapping("/translate")
